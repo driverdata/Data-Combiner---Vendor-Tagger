@@ -1,0 +1,5 @@
+# Development requirements
+black
+isort
+ruff
+pytest

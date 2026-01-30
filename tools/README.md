@@ -15,3 +15,14 @@ python tools/check_deps.py --requirements requirements.txt --json
 Notes:
 - `requests` and `packaging` are optional runtime dependencies for this script to query PyPI and compare versions. If missing, the script will still work for local installed version checks but will not query PyPI.
 - The `--upgrade` flag runs `python -m pip install -U <package>` and will ask for confirmation unless `--yes` is provided.
+
+## `dev_tools.py`
+
+A small developer CLI to run common tasks locally or in CI:
+
+```bash
+python tools/dev_tools.py format
+python tools/dev_tools.py lint
+python tools/dev_tools.py test
+python tools/dev_tools.py check-deps
+```

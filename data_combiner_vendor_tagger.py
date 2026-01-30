@@ -1,21 +1,25 @@
 # -*- coding: utf-8 -*-
+# ruff: noqa: E402
 import os
-os.environ.setdefault("PYTHONIOENCODING", "utf-8")
+
+os.environ.setdefault("PYTHONIOENCODING", "utf-8")  # noqa: E402
 
 import warnings
+
 warnings.filterwarnings(
     "ignore",
     message="Workbook contains no default style, apply openpyxl's default",
-    module="openpyxl.styles.stylesheet"
-)
+    module="openpyxl.styles.stylesheet",
+)  # noqa: E402
 
 import io
 import re
-import streamlit as st
+
 import pandas as pd
+import streamlit as st
 from openpyxl import load_workbook
-from openpyxl.worksheet.table import Table, TableStyleInfo
 from openpyxl.utils import get_column_letter
+from openpyxl.worksheet.table import Table, TableStyleInfo
 
 # Optional OpenAI import
 try:
@@ -25,7 +29,7 @@ except ImportError:
 
 # RapidFuzz for fuzzy matching
 try:
-    from rapidfuzz import process, fuzz
+    from rapidfuzz import fuzz, process
 except ImportError:
     process = None
     fuzz = None
@@ -38,8 +42,9 @@ st.title("📊 Data Combiner & Vendor Tagger")
 st.sidebar.header("Configuration")
 # Optional OpenAI API key
 gpt_api_key = st.sidebar.text_input(
-    "OpenAI API Key (optional)", type="password",
-    help="Provide OpenAI API key to enable GPT-based fallback"
+    "OpenAI API Key (optional)",
+    type="password",
+    help="Provide OpenAI API key to enable GPT-based fallback",
 )
 # Determine GPT availability
 gpt_available = bool(gpt_api_key and OpenAI)
@@ -72,15 +77,21 @@ if st.sidebar.button("Check dependencies"):
     if check_results:
         df_checks = pd.DataFrame([r.__dict__ for r in check_results])
         st.sidebar.table(df_checks)
-        n_outdated = sum(1 for r in check_results if r.status in ("outdated", "missing"))
+        n_outdated = sum(
+            1 for r in check_results if r.status in ("outdated", "missing")
+        )
         st.sidebar.info(f"{n_outdated} packages missing or outdated")
         if n_outdated:
             if st.sidebar.button("Upgrade missing/outdated"):
-                confirm = st.sidebar.checkbox("I understand this will run pip install in the running environment")
+                confirm = st.sidebar.checkbox(
+                    "I understand this will run pip install in the running environment"
+                )
                 if confirm:
                     try:
                         upgrade_packages(check_results, assume_yes=True)
-                        st.sidebar.success("Upgrade completed. Restart the app / container if necessary.")
+                        st.sidebar.success(
+                            "Upgrade completed. Restart the app / container if necessary."
+                        )
                     except Exception as e:
                         st.sidebar.error(f"Upgrade failed: {e}")
 
@@ -126,10 +137,10 @@ if st.button("Run & Download"):
                     model="gpt-3.5-turbo",
                     messages=[
                         {"role": "system", "content": "You are a helpful assistant."},
-                        {"role": "user", "content": prompt}
+                        {"role": "user", "content": prompt},
                     ],
                     temperature=0.0,
-                    max_tokens=16
+                    max_tokens=16,
                 )
                 choice = resp.choices[0].message.content.strip()
             except Exception:
@@ -154,7 +165,7 @@ if st.button("Run & Download"):
                     else pd.read_excel(f, dtype=str)
                 )
                 df.insert(0, "Vendor", "")
-                sheet_name = f.name.rsplit('.', 1)[0][:31]
+                sheet_name = f.name.rsplit(".", 1)[0][:31]
                 df.to_excel(writer, sheet_name=sheet_name, index=False)
                 progress.progress(step / total_steps)
         buf.seek(0)
@@ -171,23 +182,21 @@ if st.button("Run & Download"):
                 continue
             last_col = get_column_letter(max_col)
             ref = f"A1:{last_col}{max_row}"
-            safe = re.sub(r'[^A-Za-z0-9_]', '_', ws.title)
+            safe = re.sub(r"[^A-Za-z0-9_]", "_", ws.title)
             tbl = Table(displayName=f"tbl_{safe}", ref=ref)
             tbl.tableStyleInfo = TableStyleInfo(
                 name="TableStyleMedium9",
                 showFirstColumn=False,
                 showLastColumn=False,
                 showRowStripes=True,
-                showColumnStripes=False
+                showColumnStripes=False,
             )
             ws.add_table(tbl)
 
-            # Fuzzy matching
-            vendor = ""
-            if process and fuzz:
-                m = process.extractOne(ws.title, master, scorer=fuzz.partial_ratio)
-                if m and m[1] >= threshold:
-                    vendor = m[0]
+            # Fuzzy matching using dcvt.match.match_vendor
+            from dcvt.match import match_vendor
+
+            vendor = match_vendor(ws.title, master, threshold=threshold)
             # GPT fallback
             if not vendor and gpt_available:
                 vendor = gpt_match(ws.title)
@@ -205,9 +214,10 @@ if st.button("Run & Download"):
         out_buf.seek(0)
         st.success("✅ Processing complete!")
         st.download_button(
-            "Download Combined Workbook", out_buf,
+            "Download Combined Workbook",
+            out_buf,
             file_name=output_filename,
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
     except Exception as e:
         st.error(f"An error occurred: {e}")

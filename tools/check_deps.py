@@ -15,6 +15,7 @@ Usage:
     python tools/check_deps.py --requirements requirements.txt --upgrade --yes
 
 """
+
 from __future__ import annotations
 
 import argparse
@@ -29,8 +30,10 @@ try:
     # Python 3.8+: importlib.metadata available in stdlib
     from importlib.metadata import version as installed_version
 except Exception:  # pragma: no cover - fallback
+
     def installed_version(pkg_name: str) -> str:  # type: ignore
         raise ImportError("importlib.metadata not available in this Python")
+
 
 try:
     import requests
@@ -38,8 +41,8 @@ except ImportError:  # pragma: no cover - keep dependency optional
     requests = None
 
 try:
-    from packaging.version import parse as parse_version
     from packaging.requirements import Requirement
+    from packaging.version import parse as parse_version
 except Exception:  # pragma: no cover - soft fallback
     parse_version = None  # type: ignore
     Requirement = None  # type: ignore
@@ -90,7 +93,9 @@ def req_name_and_spec(req_line: str) -> Tuple[str, str]:
 
 def get_latest_version_from_pypi(name: str) -> Optional[str]:
     if requests is None:
-        raise RuntimeError("requests library is required to query PyPI. Install it to enable this feature.")
+        raise RuntimeError(
+            "requests library is required to query PyPI. Install it to enable this feature."
+        )
     try:
         r = requests.get(PYPI_URL.format(name=name), timeout=10)
         if r.status_code != 200:
@@ -130,9 +135,21 @@ def check_deps(requirements_path: str) -> List[DepStatus]:
             else:
                 status = "unknown"
 
-            results.append(DepStatus(name=name, spec=spec, installed=inst, latest=latest, status=status))
+            results.append(
+                DepStatus(
+                    name=name, spec=spec, installed=inst, latest=latest, status=status
+                )
+            )
         except Exception as e:  # pragma: no cover - defensive
-            results.append(DepStatus(name=name, spec=spec, installed=None, latest=None, status=f"error: {e}"))
+            results.append(
+                DepStatus(
+                    name=name,
+                    spec=spec,
+                    installed=None,
+                    latest=None,
+                    status=f"error: {e}",
+                )
+            )
     return results
 
 
@@ -159,7 +176,11 @@ def upgrade_packages(pkgs: List[DepStatus], assume_yes: bool = False) -> None:
     for p in to_install:
         print(f" - {p}")
     if not assume_yes:
-        yn = input("Proceed with pip install -U for the above packages? [y/N]: ").strip().lower()
+        yn = (
+            input("Proceed with pip install -U for the above packages? [y/N]: ")
+            .strip()
+            .lower()
+        )
         if yn not in ("y", "yes"):
             print("Aborted by user.")
             return
@@ -171,11 +192,24 @@ def upgrade_packages(pkgs: List[DepStatus], assume_yes: bool = False) -> None:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-    p = argparse.ArgumentParser(description="Check installed packages against PyPI for a requirements file.")
-    p.add_argument("--requirements", "-r", default="requirements.txt", help="Path to requirements file")
+    p = argparse.ArgumentParser(
+        description="Check installed packages against PyPI for a requirements file."
+    )
+    p.add_argument(
+        "--requirements",
+        "-r",
+        default="requirements.txt",
+        help="Path to requirements file",
+    )
     p.add_argument("--json", action="store_true", help="Output results as JSON")
-    p.add_argument("--upgrade", action="store_true", help="Offer to upgrade missing/outdated packages")
-    p.add_argument("--yes", action="store_true", help="Assume yes for upgrades (no confirmation)")
+    p.add_argument(
+        "--upgrade",
+        action="store_true",
+        help="Offer to upgrade missing/outdated packages",
+    )
+    p.add_argument(
+        "--yes", action="store_true", help="Assume yes for upgrades (no confirmation)"
+    )
     args = p.parse_args(argv)
 
     try:

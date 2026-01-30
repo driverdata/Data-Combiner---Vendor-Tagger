@@ -6,3 +6,7 @@ streamlit
 httpx
 openai
 rapidfuzz
+
+# Dev / tooling
+requests
+packaging

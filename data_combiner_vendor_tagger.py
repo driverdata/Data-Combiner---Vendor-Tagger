@@ -54,6 +54,36 @@ else:
 threshold = st.sidebar.slider("Fuzzy threshold (0–100)", 0, 100, 80)
 output_filename = st.sidebar.text_input("Output filename", "combined.xlsx")
 
+# --- Maintenance (dependency checks) ---
+st.sidebar.header("Maintenance")
+if st.sidebar.button("Check dependencies"):
+    try:
+        from tools.check_deps import check_deps, upgrade_packages
+    except Exception as e:
+        st.sidebar.error(f"Cannot import dependency checker: {e}")
+        check_results = []
+    else:
+        try:
+            check_results = check_deps("requirements.txt")
+        except Exception as e:
+            st.sidebar.error(f"Dependency check failed: {e}")
+            check_results = []
+
+    if check_results:
+        df_checks = pd.DataFrame([r.__dict__ for r in check_results])
+        st.sidebar.table(df_checks)
+        n_outdated = sum(1 for r in check_results if r.status in ("outdated", "missing"))
+        st.sidebar.info(f"{n_outdated} packages missing or outdated")
+        if n_outdated:
+            if st.sidebar.button("Upgrade missing/outdated"):
+                confirm = st.sidebar.checkbox("I understand this will run pip install in the running environment")
+                if confirm:
+                    try:
+                        upgrade_packages(check_results, assume_yes=True)
+                        st.sidebar.success("Upgrade completed. Restart the app / container if necessary.")
+                    except Exception as e:
+                        st.sidebar.error(f"Upgrade failed: {e}")
+
 # --- File uploads ---
 st.subheader("1. Upload Data Files (.csv, .xlsx)")
 uploaded_files = st.file_uploader(

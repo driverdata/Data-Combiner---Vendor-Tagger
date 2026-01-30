@@ -1,12 +1,12 @@
 # requirements.txt
-pandas
-openpyxl
-xlrd
-streamlit
-httpx
-openai
-rapidfuzz
+pandas==2.3.3
+openpyxl==3.1.5
+xlrd==2.0.1
+streamlit==1.53.1
+httpx==0.28.1
+openai==2.16.0
+rapidfuzz==3.14.3
 
 # Dev / tooling
-requests
-packaging
+requests==2.32.3
+packaging==24.2

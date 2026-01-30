@@ -46,6 +46,9 @@ gpt_api_key = st.sidebar.text_input(
     type="password",
     help="Provide OpenAI API key to enable GPT-based fallback",
 )
+# Check secrets
+if not gpt_api_key and "openai" in st.secrets:
+    gpt_api_key = st.secrets["openai"]["api_key"]
 # Determine GPT availability
 gpt_available = bool(gpt_api_key and OpenAI)
 if gpt_available:
